@@ -1,0 +1,162 @@
+use pinocchio::{account_info::AccountInfo, instruction::Signer, pubkey::{find_program_address, Pubkey}, seeds, sysvars::{rent::Rent, Sysvar}, ProgramResult};
+use spl_tlv_account_resolution::{account::ExtraAccountMeta, seeds::Seed, solana_pubkey::Pubkey as SolanaPubkey, state::ExtraAccountMetaList};
+
+use crate::{load, ABLError, ListConfig};
+
+
+pub struct SetupExtraMetas<'a> {
+    pub authority: &'a AccountInfo,
+    pub ebalts_mint_config: &'a AccountInfo,
+    pub mint: &'a AccountInfo,
+    pub extra_metas: &'a AccountInfo,
+    pub system_program: &'a AccountInfo,
+    pub remaining_accounts: &'a [AccountInfo],
+    pub extra_metas_bump: u8,
+}
+
+impl<'a> TryFrom<&'a [AccountInfo]> for SetupExtraMetas<'a> {
+    type Error = ABLError;
+
+    fn try_from(accounts: &'a [AccountInfo]) -> Result<Self, Self::Error> {
+        let [authority, ebalts_mint_config, mint, extra_metas, system_program, remaining_accounts @ ..] = accounts else {
+            return Err(ABLError::NotEnoughAccounts);
+        };
+
+        if !authority.is_signer() {
+            return Err(ABLError::InvalidAuthority);
+        }
+
+        // derive extra_metas account
+        let (extra_metas_address, extra_metas_bump) = find_program_address(&[ebalts_interface::THAW_EXTRA_ACCOUNT_METAS_SEED, mint.key()], &crate::ID);
+        // need to check because we cannot rely on system program create instruction
+        // as the account may already be initialized
+        if extra_metas_address.ne(extra_metas.key()) {
+            return Err(ABLError::InvalidExtraMetasAccount);
+        }
+
+        // check if system program is valid
+        if system_program.key().ne(&pinocchio_system::ID) {
+            return Err(ABLError::InvalidSystemProgram);
+        }
+
+        Ok(Self {
+            authority,
+            ebalts_mint_config,
+            mint,
+            extra_metas,
+            system_program,
+            remaining_accounts,
+            extra_metas_bump,
+        })
+    }
+}
+
+impl<'a> SetupExtraMetas<'a> {
+    pub const DISCRIMINATOR: u8 = 0x04;
+
+    pub fn process(&self) -> ProgramResult {    
+        let mint_config_data = self.ebalts_mint_config.try_borrow_data()?;
+        let mint_config = ebalts::state::load_mint_config(&mint_config_data)
+            .map_err(|_| ABLError::InvalidEbaltsMintConfig)?;
+
+        // only the selected freeze authority should be able to set the extra metas
+        if mint_config.mint.as_array() == self.mint.key() && mint_config.freeze_authority.as_array() != self.authority.key() {
+            return Err(ABLError::InvalidAuthority.into());
+        }
+
+        if self.remaining_accounts.len() > 5 {
+            return Err(ABLError::InvalidData.into());
+        }
+
+        let mut lists = [Option::<&Pubkey>::None; 5];
+
+        let mut i = 0;
+        for account in self.remaining_accounts {
+            let _ = unsafe { load::<ListConfig>(&account.try_borrow_data()?)? };
+            lists[i] = Some(account.key());
+            i += 1;
+        }
+        
+
+        let lists_slice = &lists[..i];
+
+        let data_len = get_extra_metas_size(lists_slice);
+        let min_lamports = Rent::get()?.minimum_balance(data_len);
+
+        if self.extra_metas.is_owned_by(&crate::ID) {
+            let current_lamports = self.extra_metas.lamports();
+            let auth_lamports = self.authority.lamports();
+
+            // just resize
+            self.extra_metas.resize(data_len)?;
+
+            if current_lamports < min_lamports {
+                // transfer to extra
+                let diff = min_lamports - current_lamports;
+                pinocchio_system::instructions::Transfer {
+                    from: self.authority,
+                    to: self.extra_metas,
+                    lamports: diff,
+                }.invoke()?;
+            } else if current_lamports > min_lamports {
+                // transfer from extra
+                let diff = current_lamports - min_lamports;
+                unsafe {
+                    *self.extra_metas.borrow_mut_lamports_unchecked() = min_lamports;
+                    *self.authority.borrow_mut_lamports_unchecked() = auth_lamports.checked_add(diff).unwrap();
+                }
+            }
+        } else {
+            // create new account
+
+            let bump_seed = [self.extra_metas_bump];
+            let seeds = seeds!(ebalts_interface::THAW_EXTRA_ACCOUNT_METAS_SEED, self.mint.key(), &bump_seed);
+            let signer = Signer::from(&seeds);
+                
+            pinocchio_system::instructions::CreateAccount {
+                from: self.authority,
+                to: self.extra_metas,
+                lamports: min_lamports,
+                space: data_len as u64,
+                owner: &crate::ID,
+            }.invoke_signed(&[signer])?;
+        }
+
+        let mut extra_metas_data = self.extra_metas.try_borrow_mut_data()?;
+        let (metas, len) = get_extra_metas(lists_slice);
+
+        ExtraAccountMetaList::init::<ebalts_interface::instruction::CanThawPermissionlessInstruction>(&mut extra_metas_data, &metas[..len]).unwrap();
+
+        Ok(())
+    }
+}
+
+
+fn get_extra_metas(lists: &[Option<&Pubkey>]) -> ([ExtraAccountMeta; 10], usize) {
+    let mut metas = [ExtraAccountMeta::default(); 10];
+
+    let mut index: usize = 0;
+    for list in lists {
+        metas[index] = ExtraAccountMeta::new_with_pubkey(&SolanaPubkey::new_from_array(*list.unwrap()), false, false).unwrap();
+        metas[index + 1] = ExtraAccountMeta::new_with_seeds(
+            &[
+                Seed::AccountKey { index: index as u8 + 5 },
+                Seed::AccountData {
+                    account_index: 1, // token account
+                    data_index: 32,   // ta owner
+                    length: 32,
+                },
+            ],
+            false,
+            false,
+        )
+        .unwrap();
+        index += 2;
+    }
+    
+    (metas, index - 5)
+}
+
+fn get_extra_metas_size(lists: &[Option<&Pubkey>]) -> usize {
+    ExtraAccountMetaList::size_of(2 * lists.len()).unwrap()
+}
