@@ -5,47 +5,42 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use crate::generated::types::Mode;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
+use solana_program::pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
-pub struct SetupExtraMetas {
+pub struct CreateList {
     pub authority: solana_program::pubkey::Pubkey,
 
-    pub ebalts_mint_config: solana_program::pubkey::Pubkey,
-
-    pub mint: solana_program::pubkey::Pubkey,
-
-    pub extra_metas: solana_program::pubkey::Pubkey,
+    pub list_config: solana_program::pubkey::Pubkey,
 
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl SetupExtraMetas {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        self.instruction_with_remaining_accounts(&[])
+impl CreateList {
+    pub fn instruction(
+        &self,
+        args: CreateListInstructionArgs,
+    ) -> solana_program::instruction::Instruction {
+        self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
+        args: CreateListInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.ebalts_mint_config,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.mint, false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.extra_metas,
+            self.list_config,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -53,7 +48,9 @@ impl SetupExtraMetas {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&SetupExtraMetasInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateListInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
+        data.append(&mut args);
 
         solana_program::instruction::Instruction {
             program_id: crate::ABL_ID,
@@ -65,42 +62,47 @@ impl SetupExtraMetas {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SetupExtraMetasInstructionData {
+pub struct CreateListInstructionData {
     discriminator: u8,
 }
 
-impl SetupExtraMetasInstructionData {
+impl CreateListInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 4 }
+        Self { discriminator: 1 }
     }
 }
 
-impl Default for SetupExtraMetasInstructionData {
+impl Default for CreateListInstructionData {
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// Instruction builder for `SetupExtraMetas`.
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CreateListInstructionArgs {
+    pub mode: Mode,
+    pub seed: Pubkey,
+}
+
+/// Instruction builder for `CreateList`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
-///   2. `[]` mint
-///   3. `[writable]` extra_metas
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   0. `[writable, signer]` authority
+///   1. `[writable]` list_config
+///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct SetupExtraMetasBuilder {
+pub struct CreateListBuilder {
     authority: Option<solana_program::pubkey::Pubkey>,
-    ebalts_mint_config: Option<solana_program::pubkey::Pubkey>,
-    mint: Option<solana_program::pubkey::Pubkey>,
-    extra_metas: Option<solana_program::pubkey::Pubkey>,
+    list_config: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
+    mode: Option<Mode>,
+    seed: Option<Pubkey>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl SetupExtraMetasBuilder {
+impl CreateListBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -110,27 +112,24 @@ impl SetupExtraMetasBuilder {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
-        &mut self,
-        ebalts_mint_config: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.ebalts_mint_config = Some(ebalts_mint_config);
-        self
-    }
-    #[inline(always)]
-    pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.mint = Some(mint);
-        self
-    }
-    #[inline(always)]
-    pub fn extra_metas(&mut self, extra_metas: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.extra_metas = Some(extra_metas);
+    pub fn list_config(&mut self, list_config: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.list_config = Some(list_config);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
+        self
+    }
+    #[inline(always)]
+    pub fn mode(&mut self, mode: Mode) -> &mut Self {
+        self.mode = Some(mode);
+        self
+    }
+    #[inline(always)]
+    pub fn seed(&mut self, seed: Pubkey) -> &mut Self {
+        self.seed = Some(seed);
         self
     }
     /// Add an additional account to the instruction.
@@ -153,63 +152,57 @@ impl SetupExtraMetasBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = SetupExtraMetas {
+        let accounts = CreateList {
             authority: self.authority.expect("authority is not set"),
-            ebalts_mint_config: self
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
-            mint: self.mint.expect("mint is not set"),
-            extra_metas: self.extra_metas.expect("extra_metas is not set"),
+            list_config: self.list_config.expect("list_config is not set"),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
+        let args = CreateListInstructionArgs {
+            mode: self.mode.clone().expect("mode is not set"),
+            seed: self.seed.clone().expect("seed is not set"),
+        };
 
-        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `setup_extra_metas` CPI accounts.
-pub struct SetupExtraMetasCpiAccounts<'a, 'b> {
+/// `create_list` CPI accounts.
+pub struct CreateListCpiAccounts<'a, 'b> {
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
+    pub list_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `setup_extra_metas` CPI instruction.
-pub struct SetupExtraMetasCpi<'a, 'b> {
+/// `create_list` CPI instruction.
+pub struct CreateListCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
+    pub list_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The arguments for the instruction.
+    pub __args: CreateListInstructionArgs,
 }
 
-impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
+impl<'a, 'b> CreateListCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: SetupExtraMetasCpiAccounts<'a, 'b>,
+        accounts: CreateListCpiAccounts<'a, 'b>,
+        args: CreateListInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             authority: accounts.authority,
-            ebalts_mint_config: accounts.ebalts_mint_config,
-            mint: accounts.mint,
-            extra_metas: accounts.extra_metas,
+            list_config: accounts.list_config,
             system_program: accounts.system_program,
+            __args: args,
         }
     }
     #[inline(always)]
@@ -246,21 +239,13 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.authority.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.ebalts_mint_config.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.mint.key,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.extra_metas.key,
+            *self.list_config.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -274,19 +259,19 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&SetupExtraMetasInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateListInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
+        data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::ABL_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(4 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.authority.clone());
-        account_infos.push(self.ebalts_mint_config.clone());
-        account_infos.push(self.mint.clone());
-        account_infos.push(self.extra_metas.clone());
+        account_infos.push(self.list_config.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -300,29 +285,27 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `SetupExtraMetas` via CPI.
+/// Instruction builder for `CreateList` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
-///   2. `[]` mint
-///   3. `[writable]` extra_metas
-///   4. `[]` system_program
+///   0. `[writable, signer]` authority
+///   1. `[writable]` list_config
+///   2. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct SetupExtraMetasCpiBuilder<'a, 'b> {
-    instruction: Box<SetupExtraMetasCpiBuilderInstruction<'a, 'b>>,
+pub struct CreateListCpiBuilder<'a, 'b> {
+    instruction: Box<CreateListCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateListCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(SetupExtraMetasCpiBuilderInstruction {
+        let instruction = Box::new(CreateListCpiBuilderInstruction {
             __program: program,
             authority: None,
-            ebalts_mint_config: None,
-            mint: None,
-            extra_metas: None,
+            list_config: None,
             system_program: None,
+            mode: None,
+            seed: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -336,24 +319,11 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
+    pub fn list_config(
         &mut self,
-        ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
+        list_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.ebalts_mint_config = Some(ebalts_mint_config);
-        self
-    }
-    #[inline(always)]
-    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.mint = Some(mint);
-        self
-    }
-    #[inline(always)]
-    pub fn extra_metas(
-        &mut self,
-        extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.extra_metas = Some(extra_metas);
+        self.instruction.list_config = Some(list_config);
         self
     }
     #[inline(always)]
@@ -362,6 +332,16 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
+        self
+    }
+    #[inline(always)]
+    pub fn mode(&mut self, mode: Mode) -> &mut Self {
+        self.instruction.mode = Some(mode);
+        self
+    }
+    #[inline(always)]
+    pub fn seed(&mut self, seed: Pubkey) -> &mut Self {
+        self.instruction.seed = Some(seed);
         self
     }
     /// Add an additional account to the instruction.
@@ -405,27 +385,25 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = SetupExtraMetasCpi {
+        let args = CreateListInstructionArgs {
+            mode: self.instruction.mode.clone().expect("mode is not set"),
+            seed: self.instruction.seed.clone().expect("seed is not set"),
+        };
+        let instruction = CreateListCpi {
             __program: self.instruction.__program,
 
             authority: self.instruction.authority.expect("authority is not set"),
 
-            ebalts_mint_config: self
+            list_config: self
                 .instruction
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
-
-            mint: self.instruction.mint.expect("mint is not set"),
-
-            extra_metas: self
-                .instruction
-                .extra_metas
-                .expect("extra_metas is not set"),
+                .list_config
+                .expect("list_config is not set"),
 
             system_program: self
                 .instruction
                 .system_program
                 .expect("system_program is not set"),
+            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -435,13 +413,13 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct SetupExtraMetasCpiBuilderInstruction<'a, 'b> {
+struct CreateListCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ebalts_mint_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    extra_metas: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    list_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    mode: Option<Mode>,
+    seed: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

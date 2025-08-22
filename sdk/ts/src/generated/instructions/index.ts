@@ -7,11 +7,7 @@
  */
 
 export * from './addWallet';
-export * from './freeze';
-export * from './freezePermissionless';
-export * from './initList';
+export * from './createList';
+export * from './deleteList';
 export * from './removeWallet';
 export * from './setupExtraMetas';
-export * from './thaw';
-export * from './thawPermissionless';
-export * from './togglePermissionlessInstructions';

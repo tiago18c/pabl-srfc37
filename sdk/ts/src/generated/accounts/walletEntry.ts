@@ -31,6 +31,7 @@ import {
   type MaybeAccount,
   type MaybeEncodedAccount,
 } from '@solana/kit';
+import { WalletEntrySeeds, findWalletEntryPda } from '../pdas';
 
 export const WALLET_ENTRY_DISCRIMINATOR = 2;
 
@@ -124,4 +125,24 @@ export async function fetchAllMaybeWalletEntry(
 
 export function getWalletEntrySize(): number {
   return 65;
+}
+
+export async function fetchWalletEntryFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  seeds: WalletEntrySeeds,
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<Account<WalletEntry>> {
+  const maybeAccount = await fetchMaybeWalletEntryFromSeeds(rpc, seeds, config);
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
+}
+
+export async function fetchMaybeWalletEntryFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  seeds: WalletEntrySeeds,
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<MaybeAccount<WalletEntry>> {
+  const { programAddress, ...fetchConfig } = config;
+  const [address] = await findWalletEntryPda(seeds, { programAddress });
+  return await fetchMaybeWalletEntry(rpc, address, fetchConfig);
 }

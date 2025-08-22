@@ -6,7 +6,7 @@ use solana_curve25519::edwards::PodEdwardsPoint;
 
 ///
 /// SECURITY ASSUMPTIONS OVER TX-HOOK
-/// 
+///
 /// 1- its called by the token-2022 program
 /// 2- if some other program is calling it, we don't care as we don't write state here
 /// 2- its inputs are already sanitized by the token-2022 program
@@ -27,17 +27,17 @@ pub struct CanThawPermissionless<'a> {
 }
 
 impl<'a> CanThawPermissionless<'a> {
-    pub const DISCRIMINATOR: u8 = 0x69;
+    pub const DISCRIMINATOR: u8 = 0x8;
 
     pub fn process(&self) -> ProgramResult {
-
         // remaining accounts should be pairs of list and ab_wallet
         let mut remaining_accounts = self.remaining_accounts.iter();
         while let Some(list) = remaining_accounts.next() {
             let ab_wallet = remaining_accounts.next().unwrap();
             CanThawPermissionless::validate_thaw_list(list, ab_wallet).map_err(|e| {
                 pinocchio_log::log!(100, "Failed to pass validation for list {}", list.key());
-                e })?;
+                e
+            })?;
         }
 
         Ok(())
@@ -46,7 +46,7 @@ impl<'a> CanThawPermissionless<'a> {
     fn validate_thaw_list(list: &AccountInfo, wallet_entry: &AccountInfo) -> ProgramResult {
         let list_data: &[u8] = &list.try_borrow_data()?;
         let list_config = unsafe { load::<ListConfig>(list_data)? };
-    
+
         // 3 operation modes
         // allow: only wallets that have been allowlisted can thaw, requires previously created ABWallet account
         // block: only wallets that have been blocklisted can't thaw, thawing requires ABWallet to not exist
@@ -54,9 +54,10 @@ impl<'a> CanThawPermissionless<'a> {
         match list_config.get_mode() {
             crate::Mode::Allow => {
                 let ab_wallet_data: &[u8] = &wallet_entry.try_borrow_data()?;
-                let _ = unsafe { load::<WalletEntry>(ab_wallet_data)
-                    .map_err(|_| ABLError::AccountBlocked)? };
-    
+                let _ = unsafe {
+                    load::<WalletEntry>(ab_wallet_data).map_err(|_| ABLError::AccountBlocked)?
+                };
+
                 Ok(())
             }
             crate::Mode::AllowAllEoas => {
@@ -64,7 +65,9 @@ impl<'a> CanThawPermissionless<'a> {
 
                 if !solana_curve25519::edwards::validate_edwards(&pt) {
                     let ab_wallet_data: &[u8] = &wallet_entry.try_borrow_data()?;
-                    let _ = unsafe { load::<WalletEntry>(ab_wallet_data).map_err(|_| ABLError::AccountBlocked)? };
+                    let _ = unsafe {
+                        load::<WalletEntry>(ab_wallet_data).map_err(|_| ABLError::AccountBlocked)?
+                    };
                 }
 
                 Ok(())
@@ -72,7 +75,7 @@ impl<'a> CanThawPermissionless<'a> {
             crate::Mode::Block => {
                 let ab_wallet_data: &[u8] = &wallet_entry.try_borrow_data()?;
                 let res = unsafe { load::<WalletEntry>(ab_wallet_data) };
-    
+
                 if res.is_ok() {
                     Err(ABLError::AccountBlocked.into())
                 } else {
@@ -87,7 +90,6 @@ impl<'a> TryFrom<&'a [AccountInfo]> for CanThawPermissionless<'a> {
     type Error = ABLError;
 
     fn try_from(accounts: &'a [AccountInfo]) -> Result<Self, Self::Error> {
-
         /*
         TX HOOK GETS CALLED WITH:
          1- authority
@@ -95,15 +97,15 @@ impl<'a> TryFrom<&'a [AccountInfo]> for CanThawPermissionless<'a> {
          3- mint
          4- owner
          5- extra account metas
-         6- (optional) source wallet block 
-         7- (optional) destination wallet block 
+         6- (optional) source wallet block
+         7- (optional) destination wallet block
          */
 
-        let [authority, token_account, mint, owner, extra_metas, remaining_accounts @ ..] = accounts else {
+        let [authority, token_account, mint, owner, extra_metas, remaining_accounts @ ..] =
+            accounts
+        else {
             return Err(ABLError::NotEnoughAccounts);
         };
-
-
 
         Ok(Self {
             authority,

@@ -14,18 +14,14 @@ import {
 } from '@solana/kit';
 import {
   type ParsedAddWalletInstruction,
-  type ParsedFreezeInstruction,
-  type ParsedFreezePermissionlessInstruction,
-  type ParsedInitListInstruction,
+  type ParsedCreateListInstruction,
+  type ParsedDeleteListInstruction,
   type ParsedRemoveWalletInstruction,
   type ParsedSetupExtraMetasInstruction,
-  type ParsedThawInstruction,
-  type ParsedThawPermissionlessInstruction,
-  type ParsedTogglePermissionlessInstructionsInstruction,
 } from '../instructions';
 
 export const ABL_PROGRAM_ADDRESS =
-  'Eba1ts11111111111111111111111111111111111111' as Address<'Eba1ts11111111111111111111111111111111111111'>;
+  'ABL37q2e55mQ87KTRe6yF89TJoeysHKipwVwSRRPbTNY' as Address<'ABL37q2e55mQ87KTRe6yF89TJoeysHKipwVwSRRPbTNY'>;
 
 export enum AblAccount {
   ListConfig,
@@ -48,23 +44,19 @@ export function identifyAblAccount(
 }
 
 export enum AblInstruction {
-  InitList,
+  CreateList,
   AddWallet,
   RemoveWallet,
   SetupExtraMetas,
-  Thaw,
-  Freeze,
-  ThawPermissionless,
-  FreezePermissionless,
-  TogglePermissionlessInstructions,
+  DeleteList,
 }
 
 export function identifyAblInstruction(
   instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array
 ): AblInstruction {
   const data = 'data' in instruction ? instruction.data : instruction;
-  if (containsBytes(data, getU8Encoder().encode(0), 0)) {
-    return AblInstruction.InitList;
+  if (containsBytes(data, getU8Encoder().encode(1), 0)) {
+    return AblInstruction.CreateList;
   }
   if (containsBytes(data, getU8Encoder().encode(2), 0)) {
     return AblInstruction.AddWallet;
@@ -72,23 +64,11 @@ export function identifyAblInstruction(
   if (containsBytes(data, getU8Encoder().encode(3), 0)) {
     return AblInstruction.RemoveWallet;
   }
-  if (containsBytes(data, getU8Encoder().encode(3), 0)) {
+  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
     return AblInstruction.SetupExtraMetas;
   }
-  if (containsBytes(data, getU8Encoder().encode(4), 0)) {
-    return AblInstruction.Thaw;
-  }
   if (containsBytes(data, getU8Encoder().encode(5), 0)) {
-    return AblInstruction.Freeze;
-  }
-  if (containsBytes(data, getU8Encoder().encode(6), 0)) {
-    return AblInstruction.ThawPermissionless;
-  }
-  if (containsBytes(data, getU8Encoder().encode(7), 0)) {
-    return AblInstruction.FreezePermissionless;
-  }
-  if (containsBytes(data, getU8Encoder().encode(8), 0)) {
-    return AblInstruction.TogglePermissionlessInstructions;
+    return AblInstruction.DeleteList;
   }
   throw new Error(
     'The provided instruction could not be identified as a abl instruction.'
@@ -96,11 +76,11 @@ export function identifyAblInstruction(
 }
 
 export type ParsedAblInstruction<
-  TProgram extends string = 'Eba1ts11111111111111111111111111111111111111',
+  TProgram extends string = 'ABL37q2e55mQ87KTRe6yF89TJoeysHKipwVwSRRPbTNY',
 > =
   | ({
-      instructionType: AblInstruction.InitList;
-    } & ParsedInitListInstruction<TProgram>)
+      instructionType: AblInstruction.CreateList;
+    } & ParsedCreateListInstruction<TProgram>)
   | ({
       instructionType: AblInstruction.AddWallet;
     } & ParsedAddWalletInstruction<TProgram>)
@@ -110,16 +90,6 @@ export type ParsedAblInstruction<
   | ({
       instructionType: AblInstruction.SetupExtraMetas;
     } & ParsedSetupExtraMetasInstruction<TProgram>)
-  | ({ instructionType: AblInstruction.Thaw } & ParsedThawInstruction<TProgram>)
   | ({
-      instructionType: AblInstruction.Freeze;
-    } & ParsedFreezeInstruction<TProgram>)
-  | ({
-      instructionType: AblInstruction.ThawPermissionless;
-    } & ParsedThawPermissionlessInstruction<TProgram>)
-  | ({
-      instructionType: AblInstruction.FreezePermissionless;
-    } & ParsedFreezePermissionlessInstruction<TProgram>)
-  | ({
-      instructionType: AblInstruction.TogglePermissionlessInstructions;
-    } & ParsedTogglePermissionlessInstructionsInstruction<TProgram>);
+      instructionType: AblInstruction.DeleteList;
+    } & ParsedDeleteListInstruction<TProgram>);

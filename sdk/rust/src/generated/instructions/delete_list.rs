@@ -10,19 +10,13 @@ use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
-pub struct SetupExtraMetas {
+pub struct DeleteList {
     pub authority: solana_program::pubkey::Pubkey,
 
-    pub ebalts_mint_config: solana_program::pubkey::Pubkey,
-
-    pub mint: solana_program::pubkey::Pubkey,
-
-    pub extra_metas: solana_program::pubkey::Pubkey,
-
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub list_config: solana_program::pubkey::Pubkey,
 }
 
-impl SetupExtraMetas {
+impl DeleteList {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
@@ -32,28 +26,17 @@ impl SetupExtraMetas {
         &self,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.ebalts_mint_config,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.mint, false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.extra_metas,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.system_program,
+            self.list_config,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&SetupExtraMetasInstructionData::new()).unwrap();
+        let data = borsh::to_vec(&DeleteListInstructionData::new()).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::ABL_ID,
@@ -65,42 +48,36 @@ impl SetupExtraMetas {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SetupExtraMetasInstructionData {
+pub struct DeleteListInstructionData {
     discriminator: u8,
 }
 
-impl SetupExtraMetasInstructionData {
+impl DeleteListInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 4 }
+        Self { discriminator: 5 }
     }
 }
 
-impl Default for SetupExtraMetasInstructionData {
+impl Default for DeleteListInstructionData {
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// Instruction builder for `SetupExtraMetas`.
+/// Instruction builder for `DeleteList`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
-///   2. `[]` mint
-///   3. `[writable]` extra_metas
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   0. `[writable, signer]` authority
+///   1. `[writable]` list_config
 #[derive(Clone, Debug, Default)]
-pub struct SetupExtraMetasBuilder {
+pub struct DeleteListBuilder {
     authority: Option<solana_program::pubkey::Pubkey>,
-    ebalts_mint_config: Option<solana_program::pubkey::Pubkey>,
-    mint: Option<solana_program::pubkey::Pubkey>,
-    extra_metas: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
+    list_config: Option<solana_program::pubkey::Pubkey>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl SetupExtraMetasBuilder {
+impl DeleteListBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -110,27 +87,8 @@ impl SetupExtraMetasBuilder {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
-        &mut self,
-        ebalts_mint_config: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.ebalts_mint_config = Some(ebalts_mint_config);
-        self
-    }
-    #[inline(always)]
-    pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.mint = Some(mint);
-        self
-    }
-    #[inline(always)]
-    pub fn extra_metas(&mut self, extra_metas: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.extra_metas = Some(extra_metas);
-        self
-    }
-    /// `[optional account, default to '11111111111111111111111111111111']`
-    #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.system_program = Some(system_program);
+    pub fn list_config(&mut self, list_config: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.list_config = Some(list_config);
         self
     }
     /// Add an additional account to the instruction.
@@ -153,63 +111,41 @@ impl SetupExtraMetasBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = SetupExtraMetas {
+        let accounts = DeleteList {
             authority: self.authority.expect("authority is not set"),
-            ebalts_mint_config: self
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
-            mint: self.mint.expect("mint is not set"),
-            extra_metas: self.extra_metas.expect("extra_metas is not set"),
-            system_program: self
-                .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+            list_config: self.list_config.expect("list_config is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
-/// `setup_extra_metas` CPI accounts.
-pub struct SetupExtraMetasCpiAccounts<'a, 'b> {
+/// `delete_list` CPI accounts.
+pub struct DeleteListCpiAccounts<'a, 'b> {
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub list_config: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `setup_extra_metas` CPI instruction.
-pub struct SetupExtraMetasCpi<'a, 'b> {
+/// `delete_list` CPI instruction.
+pub struct DeleteListCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub list_config: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
+impl<'a, 'b> DeleteListCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: SetupExtraMetasCpiAccounts<'a, 'b>,
+        accounts: DeleteListCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
             authority: accounts.authority,
-            ebalts_mint_config: accounts.ebalts_mint_config,
-            mint: accounts.mint,
-            extra_metas: accounts.extra_metas,
-            system_program: accounts.system_program,
+            list_config: accounts.list_config,
         }
     }
     #[inline(always)]
@@ -246,25 +182,13 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.authority.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.ebalts_mint_config.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.mint.key,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.extra_metas.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.system_program.key,
+            *self.list_config.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -274,20 +198,17 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&SetupExtraMetasInstructionData::new()).unwrap();
+        let data = borsh::to_vec(&DeleteListInstructionData::new()).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::ABL_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(3 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.authority.clone());
-        account_infos.push(self.ebalts_mint_config.clone());
-        account_infos.push(self.mint.clone());
-        account_infos.push(self.extra_metas.clone());
-        account_infos.push(self.system_program.clone());
+        account_infos.push(self.list_config.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -300,29 +221,23 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `SetupExtraMetas` via CPI.
+/// Instruction builder for `DeleteList` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
-///   2. `[]` mint
-///   3. `[writable]` extra_metas
-///   4. `[]` system_program
+///   0. `[writable, signer]` authority
+///   1. `[writable]` list_config
 #[derive(Clone, Debug)]
-pub struct SetupExtraMetasCpiBuilder<'a, 'b> {
-    instruction: Box<SetupExtraMetasCpiBuilderInstruction<'a, 'b>>,
+pub struct DeleteListCpiBuilder<'a, 'b> {
+    instruction: Box<DeleteListCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
+impl<'a, 'b> DeleteListCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(SetupExtraMetasCpiBuilderInstruction {
+        let instruction = Box::new(DeleteListCpiBuilderInstruction {
             __program: program,
             authority: None,
-            ebalts_mint_config: None,
-            mint: None,
-            extra_metas: None,
-            system_program: None,
+            list_config: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -336,32 +251,11 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
+    pub fn list_config(
         &mut self,
-        ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
+        list_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.ebalts_mint_config = Some(ebalts_mint_config);
-        self
-    }
-    #[inline(always)]
-    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.mint = Some(mint);
-        self
-    }
-    #[inline(always)]
-    pub fn extra_metas(
-        &mut self,
-        extra_metas: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.extra_metas = Some(extra_metas);
-        self
-    }
-    #[inline(always)]
-    pub fn system_program(
-        &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.system_program = Some(system_program);
+        self.instruction.list_config = Some(list_config);
         self
     }
     /// Add an additional account to the instruction.
@@ -405,27 +299,15 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = SetupExtraMetasCpi {
+        let instruction = DeleteListCpi {
             __program: self.instruction.__program,
 
             authority: self.instruction.authority.expect("authority is not set"),
 
-            ebalts_mint_config: self
+            list_config: self
                 .instruction
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
-
-            mint: self.instruction.mint.expect("mint is not set"),
-
-            extra_metas: self
-                .instruction
-                .extra_metas
-                .expect("extra_metas is not set"),
-
-            system_program: self
-                .instruction
-                .system_program
-                .expect("system_program is not set"),
+                .list_config
+                .expect("list_config is not set"),
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -435,13 +317,10 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct SetupExtraMetasCpiBuilderInstruction<'a, 'b> {
+struct DeleteListCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ebalts_mint_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    extra_metas: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    list_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

@@ -17,8 +17,8 @@ pub enum ABLError {
     ImmutableOwnerExtensionMissing,
     InvalidData,
     InvalidEbaltsMintConfig,
+    ListNotEmpty,
 }
-
 
 impl From<ABLError> for ProgramError {
     fn from(e: ABLError) -> Self {

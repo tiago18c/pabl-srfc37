@@ -9,8 +9,6 @@
 import {
   AccountRole,
   combineCodec,
-  getAddressDecoder,
-  getAddressEncoder,
   getStructDecoder,
   getStructEncoder,
   getU8Decoder,
@@ -28,11 +26,12 @@ import {
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type TransactionSigner,
+  type WritableAccount,
 } from '@solana/kit';
 import { ABL_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export const SETUP_EXTRA_METAS_DISCRIMINATOR = 3;
+export const SETUP_EXTRA_METAS_DISCRIMINATOR = 4;
 
 export function getSetupExtraMetasDiscriminatorBytes() {
   return getU8Encoder().encode(SETUP_EXTRA_METAS_DISCRIMINATOR);
@@ -63,7 +62,7 @@ export type SetupExtraMetasInstruction<
         ? ReadonlyAccount<TAccountMint>
         : TAccountMint,
       TAccountExtraMetas extends string
-        ? ReadonlyAccount<TAccountExtraMetas>
+        ? WritableAccount<TAccountExtraMetas>
         : TAccountExtraMetas,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
@@ -72,30 +71,19 @@ export type SetupExtraMetasInstruction<
     ]
   >;
 
-export type SetupExtraMetasInstructionData = {
-  discriminator: number;
-  newFreezeAuthority: Address;
-};
+export type SetupExtraMetasInstructionData = { discriminator: number };
 
-export type SetupExtraMetasInstructionDataArgs = {
-  newFreezeAuthority: Address;
-};
+export type SetupExtraMetasInstructionDataArgs = {};
 
 export function getSetupExtraMetasInstructionDataEncoder(): Encoder<SetupExtraMetasInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([
-      ['discriminator', getU8Encoder()],
-      ['newFreezeAuthority', getAddressEncoder()],
-    ]),
+    getStructEncoder([['discriminator', getU8Encoder()]]),
     (value) => ({ ...value, discriminator: SETUP_EXTRA_METAS_DISCRIMINATOR })
   );
 }
 
 export function getSetupExtraMetasInstructionDataDecoder(): Decoder<SetupExtraMetasInstructionData> {
-  return getStructDecoder([
-    ['discriminator', getU8Decoder()],
-    ['newFreezeAuthority', getAddressDecoder()],
-  ]);
+  return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
 export function getSetupExtraMetasInstructionDataCodec(): Codec<
@@ -120,7 +108,6 @@ export type SetupExtraMetasInput<
   mint: Address<TAccountMint>;
   extraMetas: Address<TAccountExtraMetas>;
   systemProgram?: Address<TAccountSystemProgram>;
-  newFreezeAuthority: SetupExtraMetasInstructionDataArgs['newFreezeAuthority'];
   lists: Array<Address>;
 };
 
@@ -159,7 +146,7 @@ export function getSetupExtraMetasInstruction<
       isWritable: false,
     },
     mint: { value: input.mint ?? null, isWritable: false },
-    extraMetas: { value: input.extraMetas ?? null, isWritable: false },
+    extraMetas: { value: input.extraMetas ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -193,9 +180,7 @@ export function getSetupExtraMetasInstruction<
       ...remainingAccounts,
     ],
     programAddress,
-    data: getSetupExtraMetasInstructionDataEncoder().encode(
-      args as SetupExtraMetasInstructionDataArgs
-    ),
+    data: getSetupExtraMetasInstructionDataEncoder().encode({}),
   } as SetupExtraMetasInstruction<
     TProgramAddress,
     TAccountAuthority,

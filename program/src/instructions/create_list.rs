@@ -1,20 +1,25 @@
-use pinocchio::{account_info::AccountInfo, instruction::Signer, pubkey::find_program_address, seeds, sysvars::{rent::Rent, Sysvar}, ProgramResult};
+use pinocchio::{
+    account_info::AccountInfo,
+    instruction::Signer,
+    pubkey::find_program_address,
+    seeds,
+    sysvars::{rent::Rent, Sysvar},
+    ProgramResult,
+};
 
-use crate::{load_mut_unchecked, ABLError, ListConfig, Discriminator, Transmutable};
+use crate::{load_mut_unchecked, ABLError, Discriminator, ListConfig, Transmutable};
 
-
-
-pub struct InitList<'a> {
+pub struct CreateList<'a> {
     pub authority: &'a AccountInfo,
-    pub config: &'a AccountInfo,
+    pub list_config: &'a AccountInfo,
     pub system_program: &'a AccountInfo,
 }
 
-impl<'a> TryFrom<&'a [AccountInfo]> for InitList<'a> {
+impl<'a> TryFrom<&'a [AccountInfo]> for CreateList<'a> {
     type Error = ABLError;
 
     fn try_from(accounts: &'a [AccountInfo]) -> Result<Self, Self::Error> {
-        let [authority, config, system_program] = accounts else {
+        let [authority, list_config, system_program] = accounts else {
             return Err(ABLError::NotEnoughAccounts);
         };
 
@@ -25,55 +30,62 @@ impl<'a> TryFrom<&'a [AccountInfo]> for InitList<'a> {
 
         Ok(Self {
             authority,
-            config,
+            list_config,
             system_program,
         })
     }
 }
 
-impl<'a> InitList<'a> {
+impl<'a> CreateList<'a> {
     pub const DISCRIMINATOR: u8 = 0x01;
 
     pub fn process(&self, remaining_data: &[u8]) -> ProgramResult {
         let [mode, seed @ ..] = remaining_data else {
             return Err(ABLError::InvalidData.into());
         };
-        
+
         if seed.len() != 32 {
             return Err(ABLError::InvalidData.into());
         }
-        
+
         if *mode > 2u8 {
             return Err(ABLError::InvalidData.into());
         }
-        
+
         let lamports = Rent::get()?.minimum_balance(ListConfig::LEN);
-        
+
         // find canonical bump to prepare signer seeds for cpi
         let seed = TryInto::<&[u8; 32]>::try_into(seed).unwrap();
-        let (_, config_bump) = find_program_address(&[ListConfig::SEED_PREFIX, seed], &crate::ID);
-        
+        let (_, config_bump) = find_program_address(
+            &[ListConfig::SEED_PREFIX, self.authority.key(), seed],
+            &crate::ID,
+        );
+
         // prepare signer seeds for cpi
         let bump_seed = [config_bump];
-        let seeds = seeds!(ListConfig::SEED_PREFIX, seed, &bump_seed);
+        let seeds = seeds!(
+            ListConfig::SEED_PREFIX,
+            self.authority.key(),
+            seed,
+            &bump_seed
+        );
         let signer = Signer::from(&seeds);
-            
+
         pinocchio_system::instructions::CreateAccount {
             from: self.authority,
-            to: self.config,
+            to: self.list_config,
             lamports,
             space: ListConfig::LEN as u64,
             owner: &crate::ID,
-        }.invoke_signed(&[signer])?;
+        }
+        .invoke_signed(&[signer])?;
 
-        let mut data = self.config.try_borrow_mut_data()?;
-        let config = unsafe { 
-            load_mut_unchecked::<ListConfig>(&mut data)? 
-        };
-        config.discriminator = ListConfig::DISCRIMINATOR;
-        config.authority = *self.authority.key();
-        config.seed = *seed;
-        config.mode = *mode;
+        let mut data = self.list_config.try_borrow_mut_data()?;
+        let list = unsafe { load_mut_unchecked::<ListConfig>(&mut data)? };
+        list.discriminator = ListConfig::DISCRIMINATOR;
+        list.authority = *self.authority.key();
+        list.seed = *seed;
+        list.mode = *mode;
 
         Ok(())
     }

@@ -14,22 +14,25 @@ import {
   type ProgramDerivedAddress,
 } from '@solana/kit';
 
-export type FreezeExtraMetasAccountSeeds = {
-  mint: Address;
+export type WalletEntrySeeds = {
+  listConfig: Address;
+
+  walletAddress: Address;
 };
 
-export async function findFreezeExtraMetasAccountPda(
-  seeds: FreezeExtraMetasAccountSeeds,
+export async function findWalletEntryPda(
+  seeds: WalletEntrySeeds,
   config: { programAddress?: Address | undefined } = {}
 ): Promise<ProgramDerivedAddress> {
   const {
-    programAddress = 'Eba1ts11111111111111111111111111111111111111' as Address<'Eba1ts11111111111111111111111111111111111111'>,
+    programAddress = 'ABL37q2e55mQ87KTRe6yF89TJoeysHKipwVwSRRPbTNY' as Address<'ABL37q2e55mQ87KTRe6yF89TJoeysHKipwVwSRRPbTNY'>,
   } = config;
   return await getProgramDerivedAddress({
     programAddress,
     seeds: [
-      getUtf8Encoder().encode('freeze_extra_account_metas'),
-      getAddressEncoder().encode(seeds.mint),
+      getUtf8Encoder().encode('wallet_entry'),
+      getAddressEncoder().encode(seeds.listConfig),
+      getAddressEncoder().encode(seeds.walletAddress),
     ],
   });
 }

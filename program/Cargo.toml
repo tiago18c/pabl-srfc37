@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 crate-type = ["lib", "cdylib"]
-name = "block_list"
+name = "allow_block_list"
 
 [dependencies]
 bytemuck = "1.23.0"

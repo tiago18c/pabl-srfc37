@@ -1,15 +1,14 @@
-use pinocchio::pubkey::Pubkey;
+use pinocchio::{program_error::ProgramError, pubkey::Pubkey, ProgramResult};
 
 use super::{Discriminator, Transmutable};
-
 
 #[repr(C)]
 pub struct ListConfig {
     pub discriminator: u8,
     pub authority: Pubkey,
     pub seed: Pubkey,
-    pub wallets_count: u64,
     pub mode: u8,
+    pub wallets_count: [u8; 8],
 }
 
 impl ListConfig {
@@ -25,6 +24,28 @@ impl ListConfig {
 
     pub fn set_mode(&mut self, mode: Mode) {
         self.mode = mode as u8;
+    }
+
+    pub fn get_wallets_count(&self) -> u64 {
+        u64::from_le_bytes(self.wallets_count)
+    }
+
+    pub fn increment_wallets_count(&mut self) -> ProgramResult {
+        self.wallets_count = self
+            .get_wallets_count()
+            .checked_add(1)
+            .ok_or(ProgramError::ArithmeticOverflow)?
+            .to_le_bytes();
+        Ok(())
+    }
+
+    pub fn decrement_wallets_count(&mut self) -> ProgramResult {
+        self.wallets_count = self
+            .get_wallets_count()
+            .checked_sub(1)
+            .ok_or(ProgramError::ArithmeticOverflow)?
+            .to_le_bytes();
+        Ok(())
     }
 }
 
@@ -44,5 +65,5 @@ impl Discriminator for ListConfig {
 pub enum Mode {
     Allow,
     AllowAllEoas,
-    Block
+    Block,
 }

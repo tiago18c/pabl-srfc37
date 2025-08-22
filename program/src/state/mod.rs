@@ -38,7 +38,9 @@ pub unsafe fn load<T: Discriminator + Transmutable>(bytes: &[u8]) -> Result<&T, 
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load_mut<T: Discriminator + Transmutable>(bytes: &mut [u8]) -> Result<&mut T, ABLError> {
+pub unsafe fn load_mut<T: Discriminator + Transmutable>(
+    bytes: &mut [u8],
+) -> Result<&mut T, ABLError> {
     load_mut_unchecked(bytes).and_then(|t: &mut T| {
         // checks if the data is initialized
         if t.is_initialized() {
@@ -72,12 +74,9 @@ pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ABLErr
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
-pub unsafe fn load_mut_unchecked<T: Transmutable>(
-    bytes: &mut [u8],
-) -> Result<&mut T, ABLError> {
+pub unsafe fn load_mut_unchecked<T: Transmutable>(bytes: &mut [u8]) -> Result<&mut T, ABLError> {
     if bytes.len() != T::LEN {
         return Err(ABLError::InvalidAccountData);
     }
     Ok(&mut *(bytes.as_mut_ptr() as *mut T))
 }
-

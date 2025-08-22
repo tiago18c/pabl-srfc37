@@ -5,9 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-  pub(crate) mod r#list_config;
-  pub(crate) mod r#wallet_entry;
+pub(crate) mod r#list_config;
+pub(crate) mod r#wallet_entry;
 
-  pub use self::r#list_config::*;
-  pub use self::r#wallet_entry::*;
-
+pub use self::r#list_config::*;
+pub use self::r#wallet_entry::*;

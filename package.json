@@ -8,8 +8,10 @@
   },
   "scripts": {
     "build": "",
-    "generate-sdks": "pnpx tsx codama.ts",
-    "test": "mocha --import=tsx ./tests/test.spec.ts"
+    "build:program": "cargo build-sbf --manifest-path=program/Cargo.toml",
+    "test": "cargo test-sbf --manifest-path=sdk/rust/Cargo.toml",
+    "build:cli": "cargo build --manifest-path=cli/Cargo.toml",
+    "generate-sdks": "pnpx tsx codama.ts"
   },
   "dependencies": {
     "@codama/renderers": "^1.0.19",

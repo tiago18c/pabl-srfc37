@@ -33,6 +33,7 @@ import {
   type MaybeAccount,
   type MaybeEncodedAccount,
 } from '@solana/kit';
+import { ListConfigSeeds, findListConfigPda } from '../pdas';
 
 export const LIST_CONFIG_DISCRIMINATOR = 1;
 
@@ -44,15 +45,15 @@ export type ListConfig = {
   discriminator: number;
   authority: Address;
   seed: Address;
-  walletsCount: bigint;
   mode: number;
+  walletsCount: bigint;
 };
 
 export type ListConfigArgs = {
   authority: Address;
   seed: Address;
-  walletsCount: number | bigint;
   mode: number;
+  walletsCount: number | bigint;
 };
 
 export function getListConfigEncoder(): Encoder<ListConfigArgs> {
@@ -61,8 +62,8 @@ export function getListConfigEncoder(): Encoder<ListConfigArgs> {
       ['discriminator', getU8Encoder()],
       ['authority', getAddressEncoder()],
       ['seed', getAddressEncoder()],
-      ['walletsCount', getU64Encoder()],
       ['mode', getU8Encoder()],
+      ['walletsCount', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: LIST_CONFIG_DISCRIMINATOR })
   );
@@ -73,8 +74,8 @@ export function getListConfigDecoder(): Decoder<ListConfig> {
     ['discriminator', getU8Decoder()],
     ['authority', getAddressDecoder()],
     ['seed', getAddressDecoder()],
-    ['walletsCount', getU64Decoder()],
     ['mode', getU8Decoder()],
+    ['walletsCount', getU64Decoder()],
   ]);
 }
 
@@ -137,4 +138,24 @@ export async function fetchAllMaybeListConfig(
 
 export function getListConfigSize(): number {
   return 74;
+}
+
+export async function fetchListConfigFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  seeds: ListConfigSeeds,
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<Account<ListConfig>> {
+  const maybeAccount = await fetchMaybeListConfigFromSeeds(rpc, seeds, config);
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
+}
+
+export async function fetchMaybeListConfigFromSeeds(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  seeds: ListConfigSeeds,
+  config: FetchAccountConfig & { programAddress?: Address } = {}
+): Promise<MaybeAccount<ListConfig>> {
+  const { programAddress, ...fetchConfig } = config;
+  const [address] = await findListConfigPda(seeds, { programAddress });
+  return await fetchMaybeListConfig(rpc, address, fetchConfig);
 }

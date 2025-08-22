@@ -38,16 +38,16 @@ import {
   type ModeArgs,
 } from '../types';
 
-export const INIT_LIST_DISCRIMINATOR = 0;
+export const CREATE_LIST_DISCRIMINATOR = 1;
 
-export function getInitListDiscriminatorBytes() {
-  return getU8Encoder().encode(INIT_LIST_DISCRIMINATOR);
+export function getCreateListDiscriminatorBytes() {
+  return getU8Encoder().encode(CREATE_LIST_DISCRIMINATOR);
 }
 
-export type InitListInstruction<
+export type CreateListInstruction<
   TProgram extends string = typeof ABL_PROGRAM_ADDRESS,
   TAccountAuthority extends string | IAccountMeta<string> = string,
-  TAccountConfig extends string | IAccountMeta<string> = string,
+  TAccountListConfig extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
@@ -60,9 +60,9 @@ export type InitListInstruction<
         ? WritableSignerAccount<TAccountAuthority> &
             IAccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
-      TAccountConfig extends string
-        ? WritableAccount<TAccountConfig>
-        : TAccountConfig,
+      TAccountListConfig extends string
+        ? WritableAccount<TAccountListConfig>
+        : TAccountListConfig,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -70,26 +70,26 @@ export type InitListInstruction<
     ]
   >;
 
-export type InitListInstructionData = {
+export type CreateListInstructionData = {
   discriminator: number;
   mode: Mode;
   seed: Address;
 };
 
-export type InitListInstructionDataArgs = { mode: ModeArgs; seed: Address };
+export type CreateListInstructionDataArgs = { mode: ModeArgs; seed: Address };
 
-export function getInitListInstructionDataEncoder(): Encoder<InitListInstructionDataArgs> {
+export function getCreateListInstructionDataEncoder(): Encoder<CreateListInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', getU8Encoder()],
       ['mode', getModeEncoder()],
       ['seed', getAddressEncoder()],
     ]),
-    (value) => ({ ...value, discriminator: INIT_LIST_DISCRIMINATOR })
+    (value) => ({ ...value, discriminator: CREATE_LIST_DISCRIMINATOR })
   );
 }
 
-export function getInitListInstructionDataDecoder(): Decoder<InitListInstructionData> {
+export function getCreateListInstructionDataDecoder(): Decoder<CreateListInstructionData> {
   return getStructDecoder([
     ['discriminator', getU8Decoder()],
     ['mode', getModeDecoder()],
@@ -97,44 +97,44 @@ export function getInitListInstructionDataDecoder(): Decoder<InitListInstruction
   ]);
 }
 
-export function getInitListInstructionDataCodec(): Codec<
-  InitListInstructionDataArgs,
-  InitListInstructionData
+export function getCreateListInstructionDataCodec(): Codec<
+  CreateListInstructionDataArgs,
+  CreateListInstructionData
 > {
   return combineCodec(
-    getInitListInstructionDataEncoder(),
-    getInitListInstructionDataDecoder()
+    getCreateListInstructionDataEncoder(),
+    getCreateListInstructionDataDecoder()
   );
 }
 
-export type InitListInput<
+export type CreateListInput<
   TAccountAuthority extends string = string,
-  TAccountConfig extends string = string,
+  TAccountListConfig extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   authority: TransactionSigner<TAccountAuthority>;
-  config: Address<TAccountConfig>;
+  listConfig: Address<TAccountListConfig>;
   systemProgram?: Address<TAccountSystemProgram>;
-  mode: InitListInstructionDataArgs['mode'];
-  seed: InitListInstructionDataArgs['seed'];
+  mode: CreateListInstructionDataArgs['mode'];
+  seed: CreateListInstructionDataArgs['seed'];
 };
 
-export function getInitListInstruction<
+export function getCreateListInstruction<
   TAccountAuthority extends string,
-  TAccountConfig extends string,
+  TAccountListConfig extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof ABL_PROGRAM_ADDRESS,
 >(
-  input: InitListInput<
+  input: CreateListInput<
     TAccountAuthority,
-    TAccountConfig,
+    TAccountListConfig,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): InitListInstruction<
+): CreateListInstruction<
   TProgramAddress,
   TAccountAuthority,
-  TAccountConfig,
+  TAccountListConfig,
   TAccountSystemProgram
 > {
   // Program address.
@@ -143,7 +143,7 @@ export function getInitListInstruction<
   // Original accounts.
   const originalAccounts = {
     authority: { value: input.authority ?? null, isWritable: true },
-    config: { value: input.config ?? null, isWritable: true },
+    listConfig: { value: input.listConfig ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -164,44 +164,44 @@ export function getInitListInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.authority),
-      getAccountMeta(accounts.config),
+      getAccountMeta(accounts.listConfig),
       getAccountMeta(accounts.systemProgram),
     ],
     programAddress,
-    data: getInitListInstructionDataEncoder().encode(
-      args as InitListInstructionDataArgs
+    data: getCreateListInstructionDataEncoder().encode(
+      args as CreateListInstructionDataArgs
     ),
-  } as InitListInstruction<
+  } as CreateListInstruction<
     TProgramAddress,
     TAccountAuthority,
-    TAccountConfig,
+    TAccountListConfig,
     TAccountSystemProgram
   >;
 
   return instruction;
 }
 
-export type ParsedInitListInstruction<
+export type ParsedCreateListInstruction<
   TProgram extends string = typeof ABL_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     authority: TAccountMetas[0];
-    config: TAccountMetas[1];
+    listConfig: TAccountMetas[1];
     systemProgram: TAccountMetas[2];
   };
-  data: InitListInstructionData;
+  data: CreateListInstructionData;
 };
 
-export function parseInitListInstruction<
+export function parseCreateListInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedInitListInstruction<TProgram, TAccountMetas> {
+): ParsedCreateListInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -216,9 +216,9 @@ export function parseInitListInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       authority: getNextAccount(),
-      config: getNextAccount(),
+      listConfig: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getInitListInstructionDataDecoder().decode(instruction.data),
+    data: getCreateListInstructionDataDecoder().decode(instruction.data),
   };
 }
