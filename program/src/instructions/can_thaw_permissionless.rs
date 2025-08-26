@@ -34,8 +34,9 @@ impl<'a> CanThawPermissionless<'a> {
         let mut remaining_accounts = self.remaining_accounts.iter();
         while let Some(list) = remaining_accounts.next() {
             let ab_wallet = remaining_accounts.next().unwrap();
-            CanThawPermissionless::validate_thaw_list(list, ab_wallet).map_err(|e| {
-                pinocchio_log::log!(100, "Failed to pass validation for list {}", list.key());
+            
+            CanThawPermissionless::validate_thaw_list(list, self.owner,ab_wallet).map_err(|e| {
+                pinocchio_log::log!("Failed to pass validation for list {}", list.key());
                 e
             })?;
         }
@@ -43,7 +44,7 @@ impl<'a> CanThawPermissionless<'a> {
         Ok(())
     }
 
-    fn validate_thaw_list(list: &AccountInfo, wallet_entry: &AccountInfo) -> ProgramResult {
+    fn validate_thaw_list(list: &AccountInfo, owner: &AccountInfo, wallet_entry: &AccountInfo) -> ProgramResult {
         let list_data: &[u8] = &list.try_borrow_data()?;
         let list_config = unsafe { load::<ListConfig>(list_data)? };
 
@@ -61,7 +62,7 @@ impl<'a> CanThawPermissionless<'a> {
                 Ok(())
             }
             crate::Mode::AllowAllEoas => {
-                let pt = PodEdwardsPoint(wallet_entry.key().clone());
+                let pt = PodEdwardsPoint(owner.key().clone());
 
                 if !solana_curve25519::edwards::validate_edwards(&pt) {
                     let ab_wallet_data: &[u8] = &wallet_entry.try_borrow_data()?;

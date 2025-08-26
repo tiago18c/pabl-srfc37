@@ -41,12 +41,10 @@ async fn thaws_eoa_wallet() {
     let mut context = TestContext::new();
 
     let _ = context.setup_ebalts();
-    let list_config = context.create_list(Mode::Allow);
+    let list_config = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[list_config]);
 
     let wallet = solana_keypair::Keypair::new();
-    let user_pubkey = wallet.pubkey();
-    let _ = context.add_wallet_to_list(&list_config, &user_pubkey);
     let ta = context.create_token_account(&wallet);
 
     let res = context.thaw_permissionless(&wallet.pubkey(), &ta).await;
