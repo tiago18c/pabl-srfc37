@@ -333,3 +333,20 @@ async fn setup_list_extra_metas_with_multiple_lists() {
         .iter()
         .any(|account| account.pubkey == wallet_entry3));
 }
+
+
+#[tokio::test]
+async fn setup_list_extra_metas_multiple_times() {
+    let mut context = TestContext::new();
+
+    let _mint_config = context.setup_ebalts();
+
+    let list_config_address = context.create_list(Mode::Allow);
+    let list_config_address_2 = context.create_list(Mode::Block);
+    let list_config_address_3 = context.create_list(Mode::AllowAllEoas);
+
+    let _res = context.setup_extra_metas(&[list_config_address]);
+    let _res = context.setup_extra_metas(&[list_config_address, list_config_address_2, list_config_address_3]);
+    let _res = context.setup_extra_metas(&[list_config_address, list_config_address_2]);
+    let _res = context.setup_extra_metas(&[]);
+}

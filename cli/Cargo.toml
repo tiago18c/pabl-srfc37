@@ -17,6 +17,8 @@ tokio = { version = "1", features = ["full"] }
 allow-block-list-client = { workspace = true }
 spl-tlv-account-resolution = "0.8.1"
 spl-transfer-hook-interface = { version = "0.8.2" }
+ebalts-client = { workspace = true }
+ebalts-interface = { workspace = true }
 
 
 

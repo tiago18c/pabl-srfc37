@@ -149,6 +149,8 @@ version = "0.1.0"
 dependencies = [
  "allow-block-list-client",
  "clap 3.2.25",
+ "ebalts-client",
+ "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
  "futures-util",
  "solana-clap-v3-utils",
  "solana-cli-config",
