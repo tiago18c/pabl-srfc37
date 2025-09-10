@@ -38,8 +38,10 @@ impl TestContext {
         // current path
         let current_dir = std::env::current_dir().unwrap();
 
-        let res =
-            vm.add_program_from_file(ebalts::ID, current_dir.join("tests/fixtures/ebalts.so"));
+        let res = vm.add_program_from_file(
+            token_acl::ID,
+            current_dir.join("tests/fixtures/token_acl.so"),
+        );
         assert!(res.is_ok());
 
         let res = vm.add_program_from_file(
@@ -189,9 +191,9 @@ impl TestContext {
     }
 
     pub fn setup_extra_metas(&mut self, lists: &[Pubkey]) -> Pubkey {
-        let (mint_cfg_pk, _) = ebalts_client::accounts::MintConfig::find_pda(&self.token.mint);
+        let (mint_cfg_pk, _) = token_acl_client::accounts::MintConfig::find_pda(&self.token.mint);
 
-        let extra_metas = ebalts_interface::get_thaw_extra_account_metas_address(
+        let extra_metas = token_acl_interface::get_thaw_extra_account_metas_address(
             &self.token.mint,
             &allow_block_list_client::programs::ABL_ID,
         );
@@ -200,7 +202,7 @@ impl TestContext {
             .authority(self.token.auth.pubkey())
             .mint(self.token.mint)
             .extra_metas(extra_metas)
-            .ebalts_mint_config(mint_cfg_pk)
+            .token_acl_mint_config(mint_cfg_pk)
             .add_remaining_accounts(
                 lists
                     .iter()
@@ -252,15 +254,16 @@ impl TestContext {
         owner: &Pubkey,
         token_account: &Pubkey,
     ) -> Instruction {
-        let (mint_cfg_pk, _) = ebalts_client::accounts::MintConfig::find_pda(&self.token.mint);
+        let (mint_cfg_pk, _) = token_acl_client::accounts::MintConfig::find_pda(&self.token.mint);
 
-        ebalts_client::create_thaw_permissionless_instruction_with_extra_metas(
+        token_acl_client::create_thaw_permissionless_instruction_with_extra_metas(
             signer,
             token_account,
             &self.token.mint,
             &mint_cfg_pk,
             &spl_token_2022::ID,
             owner,
+            false,
             |pubkey| {
                 let account = self.vm.get_account(&pubkey);
 
@@ -293,10 +296,10 @@ impl TestContext {
         self.vm.send_transaction(tx)
     }
 
-    pub fn setup_ebalts(&mut self) -> Pubkey {
-        let (mint_cfg_pk, _) = ebalts_client::accounts::MintConfig::find_pda(&self.token.mint);
+    pub fn setup_token_acl(&mut self) -> Pubkey {
+        let (mint_cfg_pk, _) = token_acl_client::accounts::MintConfig::find_pda(&self.token.mint);
 
-        let ix = ebalts_client::instructions::CreateConfigBuilder::new()
+        let ix = token_acl_client::instructions::CreateConfigBuilder::new()
             .authority(self.token.auth.pubkey())
             .gating_program(allow_block_list_client::programs::ABL_ID)
             .mint(self.token.mint)
@@ -306,7 +309,7 @@ impl TestContext {
             .token_program(spl_token_2022::ID)
             .instruction();
 
-        let ix2 = ebalts_client::instructions::TogglePermissionlessInstructionsBuilder::new()
+        let ix2 = token_acl_client::instructions::TogglePermissionlessInstructionsBuilder::new()
             .authority(self.token.auth.pubkey())
             .mint_config(mint_cfg_pk)
             .freeze_enabled(false)

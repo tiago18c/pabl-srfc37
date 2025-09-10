@@ -13,7 +13,7 @@ use borsh::BorshSerialize;
 pub struct SetupExtraMetas {
     pub authority: solana_program::pubkey::Pubkey,
 
-    pub ebalts_mint_config: solana_program::pubkey::Pubkey,
+    pub token_acl_mint_config: solana_program::pubkey::Pubkey,
 
     pub mint: solana_program::pubkey::Pubkey,
 
@@ -38,7 +38,7 @@ impl SetupExtraMetas {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.ebalts_mint_config,
+            self.token_acl_mint_config,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -86,14 +86,14 @@ impl Default for SetupExtraMetasInstructionData {
 /// ### Accounts:
 ///
 ///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
+///   1. `[]` token_acl_mint_config
 ///   2. `[]` mint
 ///   3. `[writable]` extra_metas
 ///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct SetupExtraMetasBuilder {
     authority: Option<solana_program::pubkey::Pubkey>,
-    ebalts_mint_config: Option<solana_program::pubkey::Pubkey>,
+    token_acl_mint_config: Option<solana_program::pubkey::Pubkey>,
     mint: Option<solana_program::pubkey::Pubkey>,
     extra_metas: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
@@ -110,11 +110,11 @@ impl SetupExtraMetasBuilder {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
+    pub fn token_acl_mint_config(
         &mut self,
-        ebalts_mint_config: solana_program::pubkey::Pubkey,
+        token_acl_mint_config: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
-        self.ebalts_mint_config = Some(ebalts_mint_config);
+        self.token_acl_mint_config = Some(token_acl_mint_config);
         self
     }
     #[inline(always)]
@@ -155,9 +155,9 @@ impl SetupExtraMetasBuilder {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SetupExtraMetas {
             authority: self.authority.expect("authority is not set"),
-            ebalts_mint_config: self
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
+            token_acl_mint_config: self
+                .token_acl_mint_config
+                .expect("token_acl_mint_config is not set"),
             mint: self.mint.expect("mint is not set"),
             extra_metas: self.extra_metas.expect("extra_metas is not set"),
             system_program: self
@@ -173,7 +173,7 @@ impl SetupExtraMetasBuilder {
 pub struct SetupExtraMetasCpiAccounts<'a, 'b> {
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_acl_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub mint: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -189,7 +189,7 @@ pub struct SetupExtraMetasCpi<'a, 'b> {
 
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_acl_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub mint: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -206,7 +206,7 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
         Self {
             __program: program,
             authority: accounts.authority,
-            ebalts_mint_config: accounts.ebalts_mint_config,
+            token_acl_mint_config: accounts.token_acl_mint_config,
             mint: accounts.mint,
             extra_metas: accounts.extra_metas,
             system_program: accounts.system_program,
@@ -252,7 +252,7 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.ebalts_mint_config.key,
+            *self.token_acl_mint_config.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -284,7 +284,7 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
         let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.authority.clone());
-        account_infos.push(self.ebalts_mint_config.clone());
+        account_infos.push(self.token_acl_mint_config.clone());
         account_infos.push(self.mint.clone());
         account_infos.push(self.extra_metas.clone());
         account_infos.push(self.system_program.clone());
@@ -305,7 +305,7 @@ impl<'a, 'b> SetupExtraMetasCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[signer]` authority
-///   1. `[]` ebalts_mint_config
+///   1. `[]` token_acl_mint_config
 ///   2. `[]` mint
 ///   3. `[writable]` extra_metas
 ///   4. `[]` system_program
@@ -319,7 +319,7 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         let instruction = Box::new(SetupExtraMetasCpiBuilderInstruction {
             __program: program,
             authority: None,
-            ebalts_mint_config: None,
+            token_acl_mint_config: None,
             mint: None,
             extra_metas: None,
             system_program: None,
@@ -336,11 +336,11 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn ebalts_mint_config(
+    pub fn token_acl_mint_config(
         &mut self,
-        ebalts_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
+        token_acl_mint_config: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.ebalts_mint_config = Some(ebalts_mint_config);
+        self.instruction.token_acl_mint_config = Some(token_acl_mint_config);
         self
     }
     #[inline(always)]
@@ -410,10 +410,10 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
 
             authority: self.instruction.authority.expect("authority is not set"),
 
-            ebalts_mint_config: self
+            token_acl_mint_config: self
                 .instruction
-                .ebalts_mint_config
-                .expect("ebalts_mint_config is not set"),
+                .token_acl_mint_config
+                .expect("token_acl_mint_config is not set"),
 
             mint: self.instruction.mint.expect("mint is not set"),
 
@@ -438,7 +438,7 @@ impl<'a, 'b> SetupExtraMetasCpiBuilder<'a, 'b> {
 struct SetupExtraMetasCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ebalts_mint_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_acl_mint_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     extra_metas: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,

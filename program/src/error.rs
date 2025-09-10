@@ -16,7 +16,7 @@ pub enum ABLError {
     InvalidExtraMetasAccount,
     ImmutableOwnerExtensionMissing,
     InvalidData,
-    InvalidEbaltsMintConfig,
+    InvalidTokenAclMintConfig,
     ListNotEmpty,
 }
 

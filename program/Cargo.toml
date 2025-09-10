@@ -16,8 +16,8 @@ pinocchio-log = "0.5.0"
 spl-discriminator = "0.4.0"
 spl-tlv-account-resolution = "0.10.0"
 
-ebalts-interface = { git = "https://github.com/tiago18c/ebalts" }
-ebalts = { git = "https://github.com/tiago18c/ebalts", features = [
+token-acl-interface = { git = "https://github.com/tiago18c/ebalts" }
+token-acl = { git = "https://github.com/tiago18c/ebalts", features = [
     "no-entrypoint",
 ] }
 solana-curve25519 = "2.2.1"

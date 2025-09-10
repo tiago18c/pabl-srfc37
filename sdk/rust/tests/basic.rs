@@ -169,11 +169,11 @@ async fn removes_wallet() {
 async fn setup_list_extra_metas() {
     let mut context = TestContext::new();
 
-    let mint_config = context.setup_ebalts();
+    let mint_config = context.setup_token_acl();
 
     let list_config_address = context.create_list(Mode::Allow);
 
-    let extra_metas = ebalts_interface::get_thaw_extra_account_metas_address(
+    let extra_metas = token_acl_interface::get_thaw_extra_account_metas_address(
         &context.token.mint,
         &allow_block_list_client::programs::ABL_ID,
     );
@@ -182,7 +182,7 @@ async fn setup_list_extra_metas() {
         .authority(context.token.auth.pubkey())
         .mint(context.token.mint)
         .extra_metas(extra_metas)
-        .ebalts_mint_config(mint_config)
+        .token_acl_mint_config(mint_config)
         .add_remaining_account(AccountMeta::new_readonly(list_config_address, false))
         .instruction();
 
@@ -204,13 +204,14 @@ async fn setup_list_extra_metas() {
     );
     let ta = context.create_token_account(&wallet);
 
-    let ix = ebalts_client::create_thaw_permissionless_instruction_with_extra_metas(
+    let ix = token_acl_client::create_thaw_permissionless_instruction_with_extra_metas(
         &user_pubkey,
         &ta,
         &context.token.mint,
         &mint_config,
         &spl_token_2022::ID,
         &user_pubkey,
+        false,
         |pubkey| {
             let account = context.vm.get_account(&pubkey);
             async move {
@@ -226,26 +227,23 @@ async fn setup_list_extra_metas() {
 
     let mut rev_iter = ix.accounts.iter().rev();
 
-    assert_eq!(rev_iter.next().unwrap().pubkey, extra_metas);
-    assert_eq!(
-        rev_iter.next().unwrap().pubkey,
-        allow_block_list_client::programs::ABL_ID
-    );
     assert_eq!(rev_iter.next().unwrap().pubkey, wallet_entry);
     assert_eq!(rev_iter.next().unwrap().pubkey, list_config_address);
+    assert_eq!(rev_iter.next().unwrap().pubkey, extra_metas);
+    assert!(rev_iter.any(|account| account.pubkey == allow_block_list_client::programs::ABL_ID));
 }
 
 #[tokio::test]
 async fn setup_list_extra_metas_with_multiple_lists() {
     let mut context = TestContext::new();
 
-    let mint_config = context.setup_ebalts();
+    let mint_config = context.setup_token_acl();
 
     let list_config_address = context.create_list(Mode::Allow);
     let list_config_address_2 = context.create_list(Mode::Block);
     let list_config_address_3 = context.create_list(Mode::AllowAllEoas);
 
-    let extra_metas = ebalts_interface::get_thaw_extra_account_metas_address(
+    let extra_metas = token_acl_interface::get_thaw_extra_account_metas_address(
         &context.token.mint,
         &allow_block_list_client::programs::ABL_ID,
     );
@@ -254,7 +252,7 @@ async fn setup_list_extra_metas_with_multiple_lists() {
         .authority(context.token.auth.pubkey())
         .mint(context.token.mint)
         .extra_metas(extra_metas)
-        .ebalts_mint_config(mint_config)
+        .token_acl_mint_config(mint_config)
         .add_remaining_accounts(&[
             AccountMeta::new_readonly(list_config_address, false),
             AccountMeta::new_readonly(list_config_address_2, false),
@@ -288,13 +286,14 @@ async fn setup_list_extra_metas_with_multiple_lists() {
     );
     let ta = context.create_token_account(&wallet);
 
-    let ix = ebalts_client::create_thaw_permissionless_instruction_with_extra_metas(
+    let ix = token_acl_client::create_thaw_permissionless_instruction_with_extra_metas(
         &user_pubkey,
         &ta,
         &context.token.mint,
         &mint_config,
         &spl_token_2022::ID,
         &user_pubkey,
+        false,
         |pubkey| {
             let account = context.vm.get_account(&pubkey);
             async move {
@@ -334,19 +333,22 @@ async fn setup_list_extra_metas_with_multiple_lists() {
         .any(|account| account.pubkey == wallet_entry3));
 }
 
-
 #[tokio::test]
 async fn setup_list_extra_metas_multiple_times() {
     let mut context = TestContext::new();
 
-    let _mint_config = context.setup_ebalts();
+    let _mint_config = context.setup_token_acl();
 
     let list_config_address = context.create_list(Mode::Allow);
     let list_config_address_2 = context.create_list(Mode::Block);
     let list_config_address_3 = context.create_list(Mode::AllowAllEoas);
 
     let _res = context.setup_extra_metas(&[list_config_address]);
-    let _res = context.setup_extra_metas(&[list_config_address, list_config_address_2, list_config_address_3]);
+    let _res = context.setup_extra_metas(&[
+        list_config_address,
+        list_config_address_2,
+        list_config_address_3,
+    ]);
     let _res = context.setup_extra_metas(&[list_config_address, list_config_address_2]);
     let _res = context.setup_extra_metas(&[]);
 }

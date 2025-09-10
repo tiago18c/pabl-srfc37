@@ -40,7 +40,7 @@ export function getSetupExtraMetasDiscriminatorBytes() {
 export type SetupExtraMetasInstruction<
   TProgram extends string = typeof ABL_PROGRAM_ADDRESS,
   TAccountAuthority extends string | IAccountMeta<string> = string,
-  TAccountEbaltsMintConfig extends string | IAccountMeta<string> = string,
+  TAccountTokenAclMintConfig extends string | IAccountMeta<string> = string,
   TAccountMint extends string | IAccountMeta<string> = string,
   TAccountExtraMetas extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
@@ -55,9 +55,9 @@ export type SetupExtraMetasInstruction<
         ? ReadonlySignerAccount<TAccountAuthority> &
             IAccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
-      TAccountEbaltsMintConfig extends string
-        ? ReadonlyAccount<TAccountEbaltsMintConfig>
-        : TAccountEbaltsMintConfig,
+      TAccountTokenAclMintConfig extends string
+        ? ReadonlyAccount<TAccountTokenAclMintConfig>
+        : TAccountTokenAclMintConfig,
       TAccountMint extends string
         ? ReadonlyAccount<TAccountMint>
         : TAccountMint,
@@ -98,13 +98,13 @@ export function getSetupExtraMetasInstructionDataCodec(): Codec<
 
 export type SetupExtraMetasInput<
   TAccountAuthority extends string = string,
-  TAccountEbaltsMintConfig extends string = string,
+  TAccountTokenAclMintConfig extends string = string,
   TAccountMint extends string = string,
   TAccountExtraMetas extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   authority: TransactionSigner<TAccountAuthority>;
-  ebaltsMintConfig: Address<TAccountEbaltsMintConfig>;
+  tokenAclMintConfig: Address<TAccountTokenAclMintConfig>;
   mint: Address<TAccountMint>;
   extraMetas: Address<TAccountExtraMetas>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -113,7 +113,7 @@ export type SetupExtraMetasInput<
 
 export function getSetupExtraMetasInstruction<
   TAccountAuthority extends string,
-  TAccountEbaltsMintConfig extends string,
+  TAccountTokenAclMintConfig extends string,
   TAccountMint extends string,
   TAccountExtraMetas extends string,
   TAccountSystemProgram extends string,
@@ -121,7 +121,7 @@ export function getSetupExtraMetasInstruction<
 >(
   input: SetupExtraMetasInput<
     TAccountAuthority,
-    TAccountEbaltsMintConfig,
+    TAccountTokenAclMintConfig,
     TAccountMint,
     TAccountExtraMetas,
     TAccountSystemProgram
@@ -130,7 +130,7 @@ export function getSetupExtraMetasInstruction<
 ): SetupExtraMetasInstruction<
   TProgramAddress,
   TAccountAuthority,
-  TAccountEbaltsMintConfig,
+  TAccountTokenAclMintConfig,
   TAccountMint,
   TAccountExtraMetas,
   TAccountSystemProgram
@@ -141,8 +141,8 @@ export function getSetupExtraMetasInstruction<
   // Original accounts.
   const originalAccounts = {
     authority: { value: input.authority ?? null, isWritable: false },
-    ebaltsMintConfig: {
-      value: input.ebaltsMintConfig ?? null,
+    tokenAclMintConfig: {
+      value: input.tokenAclMintConfig ?? null,
       isWritable: false,
     },
     mint: { value: input.mint ?? null, isWritable: false },
@@ -173,7 +173,7 @@ export function getSetupExtraMetasInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.authority),
-      getAccountMeta(accounts.ebaltsMintConfig),
+      getAccountMeta(accounts.tokenAclMintConfig),
       getAccountMeta(accounts.mint),
       getAccountMeta(accounts.extraMetas),
       getAccountMeta(accounts.systemProgram),
@@ -184,7 +184,7 @@ export function getSetupExtraMetasInstruction<
   } as SetupExtraMetasInstruction<
     TProgramAddress,
     TAccountAuthority,
-    TAccountEbaltsMintConfig,
+    TAccountTokenAclMintConfig,
     TAccountMint,
     TAccountExtraMetas,
     TAccountSystemProgram
@@ -200,7 +200,7 @@ export type ParsedSetupExtraMetasInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     authority: TAccountMetas[0];
-    ebaltsMintConfig: TAccountMetas[1];
+    tokenAclMintConfig: TAccountMetas[1];
     mint: TAccountMetas[2];
     extraMetas: TAccountMetas[3];
     systemProgram: TAccountMetas[4];
@@ -230,7 +230,7 @@ export function parseSetupExtraMetasInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       authority: getNextAccount(),
-      ebaltsMintConfig: getNextAccount(),
+      tokenAclMintConfig: getNextAccount(),
       mint: getNextAccount(),
       extraMetas: getNextAccount(),
       systemProgram: getNextAccount(),

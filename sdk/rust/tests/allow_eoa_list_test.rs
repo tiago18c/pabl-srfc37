@@ -1,8 +1,13 @@
 pub mod program_test;
 use allow_block_list_client::types::Mode;
 use solana_keypair::Keypair;
-use solana_sdk::{program_option::COption, program_pack::Pack, signer::Signer, transaction::Transaction};
-use spl_associated_token_account_client::{address::get_associated_token_address_with_program_id, instruction::create_associated_token_account};
+use solana_sdk::{
+    program_option::COption, program_pack::Pack, signer::Signer, transaction::Transaction,
+};
+use spl_associated_token_account_client::{
+    address::get_associated_token_address_with_program_id,
+    instruction::create_associated_token_account,
+};
 use spl_token_2022::state::{Account, AccountState};
 
 use crate::program_test::TestContext;
@@ -11,7 +16,7 @@ use crate::program_test::TestContext;
 async fn fails_to_thaw_non_eoa_wallet() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[list_config]);
 
@@ -25,7 +30,7 @@ async fn fails_to_thaw_non_eoa_wallet() {
 async fn thaws_non_eoa_added_owner() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[list_config]);
 
@@ -43,7 +48,7 @@ async fn thaws_non_eoa_added_owner() {
 async fn thaws_eoa_wallet() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[list_config]);
 
@@ -54,12 +59,11 @@ async fn thaws_eoa_wallet() {
     assert!(res.is_ok());
 }
 
-
 #[tokio::test]
 async fn thaws_eoa_wallet_on_ata_creation() {
     let mut context = TestContext::new();
 
-    let mint_cfg_pk = context.setup_ebalts();
+    let mint_cfg_pk = context.setup_token_acl();
     let list_config = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[list_config]);
 
@@ -70,11 +74,19 @@ async fn thaws_eoa_wallet_on_ata_creation() {
 
     let res = context.vm.airdrop(&user.pubkey(), 1_000_000_000);
     assert!(res.is_ok());
-    
 
-    let token_account = get_associated_token_address_with_program_id(&user_pubkey, &context.token.mint, &spl_token_2022::ID);
+    let token_account = get_associated_token_address_with_program_id(
+        &user_pubkey,
+        &context.token.mint,
+        &spl_token_2022::ID,
+    );
 
-    let ix = create_associated_token_account(&user_pubkey, &user_pubkey, &context.token.mint, &spl_token_2022::ID);
+    let ix = create_associated_token_account(
+        &user_pubkey,
+        &user_pubkey,
+        &context.token.mint,
+        &spl_token_2022::ID,
+    );
     instructions.push(ix);
 
     let acc = Account {
@@ -92,25 +104,27 @@ async fn thaws_eoa_wallet_on_ata_creation() {
     let res = Account::pack(acc, &mut data);
     assert!(res.is_ok());
 
-    let ix = ebalts_client::create_thaw_permissionless_instruction_with_extra_metas(
-        &user_pubkey, 
-        &token_account, 
-        &context.token.mint, 
-        &mint_cfg_pk, 
-        &spl_token_2022::ID, 
+    let ix = token_acl_client::create_thaw_permissionless_instruction_with_extra_metas(
         &user_pubkey,
+        &token_account,
+        &context.token.mint,
+        &mint_cfg_pk,
+        &spl_token_2022::ID,
+        &user_pubkey,
+        false,
         |pubkey| {
             let data = data.clone();
             let data2 = context.vm.get_account(&pubkey);
-                async move {
+            async move {
                 if pubkey == token_account {
                     return Ok(Some(data));
                 }
                 Ok(data2.map(|a| a.data.clone()))
             }
-        })
-        .await
-        .unwrap();
+        },
+    )
+    .await
+    .unwrap();
 
     instructions.push(ix);
 
@@ -121,4 +135,5 @@ async fn thaws_eoa_wallet_on_ata_creation() {
         context.vm.latest_blockhash(),
     );
     let res = context.vm.send_transaction(tx);
+    assert!(res.is_ok());
 }

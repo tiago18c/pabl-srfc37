@@ -45,6 +45,6 @@ spl-type-length-value = { workspace = true }
 spl-pod = { workspace = true }
 thiserror = "2.0"
 borsh = "^0.10"
-ebalts-interface = { workspace = true }
-ebalts = { workspace = true }
-ebalts-client = { workspace = true }
+token-acl-interface = { workspace = true }
+token-acl = { workspace = true }
+token-acl-client = { workspace = true }

@@ -81,17 +81,6 @@ dependencies = [
 
 [[package]]
 name = "ahash"
-version = "0.7.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891477e0c6a8957309ee5c45a6368af3ae14bb510732d2684ffa19af310920f9"
-dependencies = [
- "getrandom 0.2.16",
- "once_cell",
- "version_check",
-]
-
-[[package]]
-name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75"
@@ -132,8 +121,6 @@ name = "allow-block-list"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
- "ebalts 0.1.0 (git+https://github.com/tiago18c/ebalts)",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts)",
  "pinocchio",
  "pinocchio-log",
  "pinocchio-pubkey",
@@ -141,6 +128,8 @@ dependencies = [
  "solana-curve25519",
  "spl-discriminator 0.4.1",
  "spl-tlv-account-resolution 0.10.0",
+ "token-acl 0.1.0 (git+https://github.com/tiago18c/ebalts)",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts)",
 ]
 
 [[package]]
@@ -149,8 +138,6 @@ version = "0.1.0"
 dependencies = [
  "allow-block-list-client",
  "clap 3.2.25",
- "ebalts-client",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
  "futures-util",
  "solana-clap-v3-utils",
  "solana-cli-config",
@@ -161,6 +148,8 @@ dependencies = [
  "spl-tlv-account-resolution 0.8.1",
  "spl-token-client",
  "spl-transfer-hook-interface 0.8.2",
+ "token-acl-client",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=212d678)",
  "tokio",
 ]
 
@@ -169,9 +158,6 @@ name = "allow-block-list-client"
 version = "0.1.0"
 dependencies = [
  "borsh 0.10.4",
- "ebalts 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
- "ebalts-client",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
  "kaigan",
  "litesvm",
  "num-derive",
@@ -198,6 +184,9 @@ dependencies = [
  "spl-token-2022 9.0.0",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.12",
+ "token-acl 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=212d678)",
+ "token-acl-client",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=212d678)",
  "tokio",
 ]
 
@@ -600,7 +589,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
 dependencies = [
  "borsh-derive 0.10.4",
- "hashbrown 0.12.3",
+ "hashbrown 0.13.2",
 ]
 
 [[package]]
@@ -1320,127 +1309,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abe71d579d1812060163dff96056261deb5bf6729b100fa2e36a68b9649ba3d3"
 
 [[package]]
-name = "ebalts"
-version = "0.1.0"
-source = "git+https://github.com/tiago18c/ebalts?rev=a58b751#a58b751a659371867ae27f3523f125891ec53fa6"
-dependencies = [
- "arrayref",
- "bytemuck",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
- "solana-cpi",
- "solana-msg",
- "solana-program",
- "solana-program-error",
- "solana-program-pack",
- "solana-pubkey",
- "solana-rent",
- "solana-system-interface",
- "solana-sysvar",
- "spl-pod 0.5.1",
- "spl-tlv-account-resolution 0.10.0",
- "spl-token-2022 9.0.0",
- "spl-type-length-value 0.8.0",
-]
-
-[[package]]
-name = "ebalts"
-version = "0.1.0"
-source = "git+https://github.com/tiago18c/ebalts#a38415124ab2b920fd2c584eb90101ce768dc58e"
-dependencies = [
- "arrayref",
- "bytemuck",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts)",
- "solana-cpi",
- "solana-msg",
- "solana-program",
- "solana-program-error",
- "solana-program-pack",
- "solana-pubkey",
- "solana-rent",
- "solana-system-interface",
- "solana-sysvar",
- "spl-pod 0.5.1",
- "spl-tlv-account-resolution 0.10.0",
- "spl-token-2022 9.0.0",
- "spl-type-length-value 0.8.0",
-]
-
-[[package]]
-name = "ebalts-client"
-version = "0.1.0"
-source = "git+https://github.com/tiago18c/ebalts?rev=a58b751#a58b751a659371867ae27f3523f125891ec53fa6"
-dependencies = [
- "arrayref",
- "borsh 0.10.4",
- "bytemuck",
- "ebalts-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=a58b751)",
- "num-derive",
- "num-traits",
- "solana-account-info",
- "solana-cpi",
- "solana-decode-error",
- "solana-instruction",
- "solana-msg",
- "solana-program-entrypoint",
- "solana-program-error",
- "solana-pubkey",
- "spl-discriminator 0.4.1",
- "spl-pod 0.5.1",
- "spl-program-error 0.7.0",
- "spl-tlv-account-resolution 0.10.0",
- "spl-type-length-value 0.8.0",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "ebalts-interface"
-version = "0.1.0"
-source = "git+https://github.com/tiago18c/ebalts?rev=a58b751#a58b751a659371867ae27f3523f125891ec53fa6"
-dependencies = [
- "arrayref",
- "bytemuck",
- "num-derive",
- "num-traits",
- "solana-account-info",
- "solana-cpi",
- "solana-decode-error",
- "solana-instruction",
- "solana-msg",
- "solana-program-error",
- "solana-pubkey",
- "spl-discriminator 0.4.1",
- "spl-pod 0.5.1",
- "spl-program-error 0.7.0",
- "spl-tlv-account-resolution 0.10.0",
- "spl-type-length-value 0.8.0",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "ebalts-interface"
-version = "0.1.0"
-source = "git+https://github.com/tiago18c/ebalts#a38415124ab2b920fd2c584eb90101ce768dc58e"
-dependencies = [
- "arrayref",
- "bytemuck",
- "num-derive",
- "num-traits",
- "solana-account-info",
- "solana-cpi",
- "solana-decode-error",
- "solana-instruction",
- "solana-msg",
- "solana-program-error",
- "solana-pubkey",
- "spl-discriminator 0.4.1",
- "spl-pod 0.5.1",
- "spl-program-error 0.7.0",
- "spl-tlv-account-resolution 0.10.0",
- "spl-type-length-value 0.8.0",
- "thiserror 2.0.12",
-]
-
-[[package]]
 name = "ed25519"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1923,9 +1791,6 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
-dependencies = [
- "ahash 0.7.8",
-]
 
 [[package]]
 name = "hashbrown"
@@ -1933,7 +1798,7 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
 ]
 
 [[package]]
@@ -4282,7 +4147,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bebb1bbe676467db67aa8f05f86ef681be958e1f4e87dc949ec2996b588729d"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "bincode",
  "blake3",
  "bv",
@@ -4583,7 +4448,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fb6728141dc45bdde9d68b67bb914013be28f94a2aea8bb7131ea8c6161c30e"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "lazy_static",
  "log",
  "qualifier_attr",
@@ -4928,7 +4793,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4046449f81662b0b79b3f7a5e88412ae58fd63f8ef4af472a528d522a44500a"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "lazy_static",
  "log",
  "solana-bincode",
@@ -5114,7 +4979,7 @@ version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89e1d3b52b4a014efeaaab67f14e40af3972a4be61c523d612860db8e3145529"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "lazy_static",
  "solana-epoch-schedule",
  "solana-hash",
@@ -5568,7 +5433,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b87939c18937f8bfad6028779a02fa123b27e986fb2c55fbbf683952a0e4932"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "bincode",
  "bv",
  "caps",
@@ -6147,7 +6012,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13f58e4566fb3d2e28719ff00646841bb1269fc091fb75ee51da3eb855deef17"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "aquamarine",
  "arrayref",
  "base64 0.22.1",
@@ -6677,7 +6542,7 @@ version = "2.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68aae7788fea1a3b85f91be1c260b720ee7496e585a96831bb2a6f4758121e85"
 dependencies = [
- "ahash 0.8.12",
+ "ahash",
  "itertools 0.12.1",
  "log",
  "percentage",
@@ -8449,6 +8314,127 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "token-acl"
+version = "0.1.0"
+source = "git+https://github.com/tiago18c/ebalts?rev=212d678#212d678442f26c02c561f088fcf921d4f0a01d4c"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "solana-cpi",
+ "solana-msg",
+ "solana-program",
+ "solana-program-error",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rent",
+ "solana-system-interface",
+ "solana-sysvar",
+ "spl-pod 0.5.1",
+ "spl-tlv-account-resolution 0.10.0",
+ "spl-token-2022 9.0.0",
+ "spl-type-length-value 0.8.0",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=212d678)",
+]
+
+[[package]]
+name = "token-acl"
+version = "0.1.0"
+source = "git+https://github.com/tiago18c/ebalts#212d678442f26c02c561f088fcf921d4f0a01d4c"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "solana-cpi",
+ "solana-msg",
+ "solana-program",
+ "solana-program-error",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rent",
+ "solana-system-interface",
+ "solana-sysvar",
+ "spl-pod 0.5.1",
+ "spl-tlv-account-resolution 0.10.0",
+ "spl-token-2022 9.0.0",
+ "spl-type-length-value 0.8.0",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts)",
+]
+
+[[package]]
+name = "token-acl-client"
+version = "0.1.0"
+source = "git+https://github.com/tiago18c/ebalts?rev=212d678#212d678442f26c02c561f088fcf921d4f0a01d4c"
+dependencies = [
+ "arrayref",
+ "borsh 0.10.4",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
+ "spl-discriminator 0.4.1",
+ "spl-pod 0.5.1",
+ "spl-program-error 0.7.0",
+ "spl-tlv-account-resolution 0.10.0",
+ "spl-type-length-value 0.8.0",
+ "thiserror 2.0.12",
+ "token-acl-interface 0.1.0 (git+https://github.com/tiago18c/ebalts?rev=212d678)",
+]
+
+[[package]]
+name = "token-acl-interface"
+version = "0.1.0"
+source = "git+https://github.com/tiago18c/ebalts?rev=212d678#212d678442f26c02c561f088fcf921d4f0a01d4c"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-error",
+ "solana-pubkey",
+ "spl-discriminator 0.4.1",
+ "spl-pod 0.5.1",
+ "spl-program-error 0.7.0",
+ "spl-tlv-account-resolution 0.10.0",
+ "spl-type-length-value 0.8.0",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "token-acl-interface"
+version = "0.1.0"
+source = "git+https://github.com/tiago18c/ebalts#212d678442f26c02c561f088fcf921d4f0a01d4c"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-error",
+ "solana-pubkey",
+ "spl-discriminator 0.4.1",
+ "spl-pod 0.5.1",
+ "spl-program-error 0.7.0",
+ "spl-tlv-account-resolution 0.10.0",
+ "spl-type-length-value 0.8.0",
+ "thiserror 2.0.12",
+]
 
 [[package]]
 name = "tokio"

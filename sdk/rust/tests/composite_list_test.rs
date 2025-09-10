@@ -8,19 +8,18 @@ use crate::program_test::TestContext;
 async fn setups_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let allow_list = context.create_list(Mode::Allow);
     let block_list = context.create_list(Mode::Block);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
     let _ = context.setup_extra_metas(&[allow_list, block_list, allow_all_eoas_list]);
 }
 
-
 #[tokio::test]
 async fn thaws_eoa_wallet_in_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     //let allow_list = context.create_list(Mode::Allow);
     let block_list = context.create_list(Mode::Block);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
@@ -35,12 +34,11 @@ async fn thaws_eoa_wallet_in_composite_lists() {
     assert!(res.is_ok());
 }
 
-
 #[tokio::test]
 async fn fails_thaw_blocked_eoa_wallet_in_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     //let allow_list = context.create_list(Mode::Allow);
     let block_list = context.create_list(Mode::Block);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
@@ -59,7 +57,7 @@ async fn fails_thaw_blocked_eoa_wallet_in_composite_lists() {
 async fn fails_thaw_non_allowed_eoa_wallet_in_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     //let allow_list = context.create_list(Mode::Allow);
     let allow_list = context.create_list(Mode::Allow);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
@@ -72,13 +70,11 @@ async fn fails_thaw_non_allowed_eoa_wallet_in_composite_lists() {
     assert!(res.is_err());
 }
 
-
-
 #[tokio::test]
 async fn fails_thaw_non_eoa_wallet_in_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     //let allow_list = context.create_list(Mode::Allow);
     let block_list = context.create_list(Mode::Block);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
@@ -92,17 +88,20 @@ async fn fails_thaw_non_eoa_wallet_in_composite_lists() {
     assert!(res.is_err());
 }
 
-
 #[tokio::test]
 async fn thaws_non_eoa_wallet_in_composite_lists() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     //let allow_list = context.create_list(Mode::Allow);
     let block_list = context.create_list(Mode::Block);
     let allow_all_eoas_list = context.create_list(Mode::AllowAllEoas);
     let allow_all_eoas_with_pda_list = context.create_list(Mode::AllowAllEoas);
-    let _ = context.setup_extra_metas(&[block_list, allow_all_eoas_list, allow_all_eoas_with_pda_list]);
+    let _ = context.setup_extra_metas(&[
+        block_list,
+        allow_all_eoas_list,
+        allow_all_eoas_with_pda_list,
+    ]);
 
     // block_list is acting as the ta owner for test simplicity
     // as this is one of the off-the-curve available pubkeys
@@ -113,13 +112,11 @@ async fn thaws_non_eoa_wallet_in_composite_lists() {
     assert!(res.is_err());
 }
 
-
-
 /*#[tokio::test]
 async fn thaws_whitelisted_wallet() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::Allow);
     let _ = context.setup_extra_metas(&[list_config]);
 

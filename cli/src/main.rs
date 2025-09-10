@@ -34,14 +34,14 @@ async fn process_setup_extra_metas(
     mint_address: &Pubkey,
     lists: &[Pubkey],
 ) -> Result<Signature, Box<dyn Error>> {
-    let ebalts_mint_config = ebalts_client::accounts::MintConfig::find_pda(mint_address).0;
-    let extra_metas = ebalts_interface::get_thaw_extra_account_metas_address(
+    let token_acl_mint_config = token_acl_client::accounts::MintConfig::find_pda(mint_address).0;
+    let extra_metas = token_acl_interface::get_thaw_extra_account_metas_address(
         mint_address,
         &allow_block_list_client::programs::ABL_ID,
     );
     let ix = allow_block_list_client::instructions::SetupExtraMetasBuilder::new()
         .authority(payer.pubkey())
-        .ebalts_mint_config(ebalts_mint_config)
+        .token_acl_mint_config(token_acl_mint_config)
         .mint(*mint_address)
         .extra_metas(extra_metas)
         .add_remaining_accounts(

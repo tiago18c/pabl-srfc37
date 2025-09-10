@@ -29,8 +29,8 @@ spl-pod = "0.5.1"
 spl-token-2022 = { version = "9.0.0", features = ["no-entrypoint"] }
 solana-sdk = "2.2.1"
 spl-associated-token-account-client = "2.0.0"
-ebalts-interface = { git = "https://github.com/tiago18c/ebalts", rev = "a58b751" }
-ebalts-client = { git = "https://github.com/tiago18c/ebalts", rev = "a58b751" }
-ebalts = { git = "https://github.com/tiago18c/ebalts", rev = "a58b751", features = [
+token-acl-interface = { git = "https://github.com/tiago18c/ebalts", rev = "212d678" }
+token-acl-client = { git = "https://github.com/tiago18c/ebalts", rev = "212d678" }
+token-acl = { git = "https://github.com/tiago18c/ebalts", rev = "212d678", features = [
     "no-entrypoint",
 ] }

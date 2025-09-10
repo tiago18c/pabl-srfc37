@@ -361,7 +361,7 @@
                 },
                 {
                     "kind": "instructionAccountNode",
-                    "name": "ebaltsMintConfig",
+                    "name": "tokenAclMintConfig",
                     "docs": [],
                     "isWritable": false,
                     "isSigner": false,

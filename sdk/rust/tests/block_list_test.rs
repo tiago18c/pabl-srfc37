@@ -8,7 +8,7 @@ use crate::program_test::TestContext;
 async fn thaws_non_blocked_wallet() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::Block);
     let _ = context.setup_extra_metas(&[list_config]);
 
@@ -23,7 +23,7 @@ async fn thaws_non_blocked_wallet() {
 async fn fails_to_thaw_blocked_wallet() {
     let mut context = TestContext::new();
 
-    let _ = context.setup_ebalts();
+    let _ = context.setup_token_acl();
     let list_config = context.create_list(Mode::Block);
     let _ = context.setup_extra_metas(&[list_config]);
 

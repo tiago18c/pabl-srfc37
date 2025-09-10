@@ -10,7 +10,7 @@ use crate::{load, ABLError, ListConfig, WalletEntry};
 
 pub struct SetupExtraMetas<'a> {
     pub authority: &'a AccountInfo,
-    pub ebalts_mint_config: &'a AccountInfo,
+    pub token_acl_mint_config: &'a AccountInfo,
     pub mint: &'a AccountInfo,
     pub extra_metas: &'a AccountInfo,
     pub system_program: &'a AccountInfo,
@@ -22,7 +22,7 @@ impl<'a> TryFrom<&'a [AccountInfo]> for SetupExtraMetas<'a> {
     type Error = ABLError;
 
     fn try_from(accounts: &'a [AccountInfo]) -> Result<Self, Self::Error> {
-        let [authority, ebalts_mint_config, mint, extra_metas, system_program, remaining_accounts @ ..] =
+        let [authority, token_acl_mint_config, mint, extra_metas, system_program, remaining_accounts @ ..] =
             accounts
         else {
             return Err(ABLError::NotEnoughAccounts);
@@ -34,7 +34,7 @@ impl<'a> TryFrom<&'a [AccountInfo]> for SetupExtraMetas<'a> {
 
         // derive extra_metas account
         let (extra_metas_address, extra_metas_bump) = find_program_address(
-            &[ebalts_interface::THAW_EXTRA_ACCOUNT_METAS_SEED, mint.key()],
+            &[token_acl_interface::THAW_EXTRA_ACCOUNT_METAS_SEED, mint.key()],
             &crate::ID,
         );
         // need to check because we cannot rely on system program create instruction
@@ -50,7 +50,7 @@ impl<'a> TryFrom<&'a [AccountInfo]> for SetupExtraMetas<'a> {
 
         Ok(Self {
             authority,
-            ebalts_mint_config,
+            token_acl_mint_config,
             mint,
             extra_metas,
             system_program,
@@ -64,9 +64,9 @@ impl<'a> SetupExtraMetas<'a> {
     pub const DISCRIMINATOR: u8 = 0x04;
 
     pub fn process(&self) -> ProgramResult {
-        let mint_config_data = self.ebalts_mint_config.try_borrow_data()?;
-        let mint_config = ebalts::state::load_mint_config(&mint_config_data)
-        .map_err(|_| ABLError::InvalidEbaltsMintConfig)?;
+        let mint_config_data = self.token_acl_mint_config.try_borrow_data()?;
+        let mint_config = token_acl::state::load_mint_config(&mint_config_data)
+        .map_err(|_| ABLError::InvalidTokenAclMintConfig)?;
     
         // only the selected freeze authority should be able to set the extra metas
         if mint_config.mint.as_array() == self.mint.key()
@@ -131,7 +131,7 @@ impl<'a> SetupExtraMetas<'a> {
             // create new account
             let bump_seed = [self.extra_metas_bump];
             let seeds = seeds!(
-                ebalts_interface::THAW_EXTRA_ACCOUNT_METAS_SEED,
+                token_acl_interface::THAW_EXTRA_ACCOUNT_METAS_SEED,
                 self.mint.key(),
                 &bump_seed
             );
@@ -150,7 +150,7 @@ impl<'a> SetupExtraMetas<'a> {
         let mut extra_metas_data = self.extra_metas.try_borrow_mut_data()?;
         let (metas, len) = get_extra_metas(lists_slice);
 
-        ExtraAccountMetaList::init::<ebalts_interface::instruction::CanThawPermissionlessInstruction>(&mut extra_metas_data, &metas[..len]).unwrap();
+        ExtraAccountMetaList::init::<token_acl_interface::instruction::CanThawPermissionlessInstruction>(&mut extra_metas_data, &metas[..len]).unwrap();
         Ok(())
     }
 }
